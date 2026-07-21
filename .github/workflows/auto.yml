@@ -1,21 +1,68 @@
-name: Auto Update
+name: 🤖 AI Auto Update
 
 on:
   workflow_dispatch:
     inputs:
-      msg:
-        description: 'কী পরিবর্তন চান?'
+      command:
+        description: 'কী করতে চান? (যেমন: "লগইন পেজের রং নীল করো")'
         required: true
+        type: string
 
 jobs:
-  update:
+  auto-update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          echo "<h1>${{ github.event.inputs.msg }}</h1>" > index.html
-          git config user.name "Bot"
-          git config user.email "bot@user.com"
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🤖 AI Code Generator
+        run: |
+          python3 -c "
+          import os
+          import re
+          
+          command = '${{ github.event.inputs.command }}'
+          print(f'🔄 Processing: {command}')
+          
+          # ফাইল পড়ো
+          with open('index.html', 'r', encoding='utf-8') as f:
+              content = f.read()
+          
+          # 👇 এখানে AI লজিক (উদাহরণ)
+          if 'রং' in command or 'color' in command.lower():
+              # কালার পরিবর্তন
+              color_match = re.search(r'(নীল|লাল|সবুজ|কালো|সাদা|orange|blue|red|green|black|white)', command)
+              if color_match:
+                  color = color_match.group(1)
+                  color_map = {
+                      'নীল': '#1a73e8', 'লাল': '#e53e3e', 'সবুজ': '#38a169',
+                      'কালো': '#1a202c', 'সাদা': '#ffffff', 'orange': '#ed8936',
+                      'blue': '#1a73e8', 'red': '#e53e3e', 'green': '#38a169',
+                      'black': '#1a202c', 'white': '#ffffff'
+                  }
+                  hex_color = color_map.get(color, '#1a73e8')
+                  # CSS-এ রং পরিবর্তন করো
+                  content = re.sub(
+                      r'(background:\s*)(#[a-fA-F0-9]+|[\w]+)',
+                      r'\1' + hex_color,
+                      content
+                  )
+                  print(f'✅ Color changed to {color} ({hex_color})')
+          
+          # ফাইল সেভ করো
+          with open('index.html', 'w', encoding='utf-8') as f:
+              f.write(content)
+          print('✅ File updated successfully!')
+          "
+
+      - name: 📤 Commit & Push
+        run: |
+          git config user.name "AI Bot"
+          git config user.email "ai-bot@github.com"
           git add index.html
-          git commit -m "Update" || echo "No changes"
-          git push
+          git diff --staged --quiet || git commit -m "🤖 AI Update: ${{ github.event.inputs.command }}"
+          git push || echo "No changes to push"
