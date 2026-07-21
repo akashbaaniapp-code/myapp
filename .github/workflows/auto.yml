@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       command:
-        description: 'কী করতে চান? (যেমন: "লগইন পেজের রং নীল করো")'
+        description: 'কী করতে চান? (যেমন: "হেডারের রং লাল করো")'
         required: true
         type: string
 
@@ -19,45 +19,17 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🤖 AI Code Generator
+      - name: 🤖 Update File
         run: |
-          python3 -c "
-          import os
-          import re
+          echo "🔄 Processing: ${{ github.event.inputs.command }}"
           
-          command = '${{ github.event.inputs.command }}'
-          print(f'🔄 Processing: {command}')
-          
-          # ফাইল পড়ো
-          with open('index.html', 'r', encoding='utf-8') as f:
-              content = f.read()
-          
-          # 👇 এখানে AI লজিক (উদাহরণ)
-          if 'রং' in command or 'color' in command.lower():
-              # কালার পরিবর্তন
-              color_match = re.search(r'(নীল|লাল|সবুজ|কালো|সাদা|orange|blue|red|green|black|white)', command)
-              if color_match:
-                  color = color_match.group(1)
-                  color_map = {
-                      'নীল': '#1a73e8', 'লাল': '#e53e3e', 'সবুজ': '#38a169',
-                      'কালো': '#1a202c', 'সাদা': '#ffffff', 'orange': '#ed8936',
-                      'blue': '#1a73e8', 'red': '#e53e3e', 'green': '#38a169',
-                      'black': '#1a202c', 'white': '#ffffff'
-                  }
-                  hex_color = color_map.get(color, '#1a73e8')
-                  # CSS-এ রং পরিবর্তন করো
-                  content = re.sub(
-                      r'(background:\s*)(#[a-fA-F0-9]+|[\w]+)',
-                      r'\1' + hex_color,
-                      content
-                  )
-                  print(f'✅ Color changed to {color} ({hex_color})')
-          
-          # ফাইল সেভ করো
-          with open('index.html', 'w', encoding='utf-8') as f:
-              f.write(content)
-          print('✅ File updated successfully!')
-          "
+          # ফাইল চেক করো
+          if [ -f "index.html" ]; then
+            echo "✅ index.html found"
+          else
+            echo "❌ index.html not found"
+            exit 1
+          fi
 
       - name: 📤 Commit & Push
         run: |
