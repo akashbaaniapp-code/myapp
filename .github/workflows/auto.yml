@@ -1,0 +1,21 @@
+name: Auto Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      msg:
+        description: 'কী পরিবর্তন চান?'
+        required: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo "<h1>${{ github.event.inputs.msg }}</h1>" > index.html
+          git config user.name "Bot"
+          git config user.email "bot@user.com"
+          git add index.html
+          git commit -m "Update" || echo "No changes"
+          git push
